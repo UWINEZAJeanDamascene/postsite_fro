@@ -1,6 +1,13 @@
 {
   "installCommand": "npm ci",
   "buildCommand": "npx tsc && npx vite build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
   "env": {
     "VITE_API_URL": "https://mult-site-backend.onrender.com"
   }
