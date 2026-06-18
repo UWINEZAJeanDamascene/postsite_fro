@@ -3,12 +3,24 @@ import type {
   LoginCredentials, 
   AuthResponse, 
   User, 
-  CreateUserData 
+  CreateUserData,
+  SetupAdminData,
+  SetupStatus,
 } from '@/types'
 
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const { data } = await api.post('/auth/login', credentials)
+    return data
+  },
+
+  getSetupStatus: async (): Promise<SetupStatus> => {
+    const { data } = await api.get('/auth/setup-status')
+    return data
+  },
+
+  setupAdmin: async (setupData: SetupAdminData): Promise<AuthResponse> => {
+    const { data } = await api.post('/auth/setup-admin', setupData)
     return data
   },
 

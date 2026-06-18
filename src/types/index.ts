@@ -64,6 +64,19 @@ export interface CreateUserData {
   assignedSiteIds?: string[];
 }
 
+export interface SetupAdminData {
+  email: string;
+  password: string;
+  name: string;
+  company_id: string;
+  company_name?: string;
+}
+
+export interface SetupStatus {
+  needsSetup: boolean;
+  userCount: number;
+}
+
 export interface Site {
   _id: string;
   name: string;

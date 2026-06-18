@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
+import { authApi } from '@/api/auth'
 import { useTheme } from '@/context/ThemeContext'
 import toast from 'react-hot-toast'
 import {
@@ -26,17 +27,38 @@ import {
 
 export default function LandingPage() {
   const navigate = useNavigate()
-  const { login, isAuthenticated, isLoading } = useAuth()
+  const { login, setupAdmin, isAuthenticated, isLoading } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const [needsSetup, setNeedsSetup] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     company_id: 'CTS',
   })
+  const [setupFormData, setSetupFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    company_id: 'CTS',
+    company_name: 'CTS',
+  })
   const [formErrors, setFormErrors] = useState<{[key: string]: string}>({})
   const { isDark, toggleTheme } = useTheme()
+
+  useEffect(() => {
+    const checkSetup = async () => {
+      try {
+        const status = await authApi.getSetupStatus()
+        setNeedsSetup(status.needsSetup)
+      } catch {
+        setNeedsSetup(false)
+      }
+    }
+
+    checkSetup()
+  }, [])
 
   // Auto-redirect authenticated users to dashboard
   useEffect(() => {
@@ -94,7 +116,54 @@ export default function LandingPage() {
     }
   }
 
-  const openLoginModal = () => setLoginModalOpen(true)
+  const handleSetupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormErrors({})
+    setIsSubmitting(true)
+
+    const errors: { [key: string]: string } = {}
+    if (!setupFormData.name || setupFormData.name.length < 2) {
+      errors.name = 'Name is required'
+    }
+    if (!setupFormData.email || !setupFormData.email.includes('@')) {
+      errors.email = 'Invalid email address'
+    }
+    if (!setupFormData.password || setupFormData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters'
+    }
+    if (!setupFormData.company_id) {
+      errors.company_id = 'Company ID is required'
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      setIsSubmitting(false)
+      return
+    }
+
+    try {
+      await setupAdmin(setupFormData)
+      toast.success('Admin account created successfully!')
+      navigate('/dashboard')
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error || error.message || 'Failed to create admin account'
+      toast.error(message)
+      setFormErrors({ root: message })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const openLoginModal = async () => {
+    try {
+      const status = await authApi.getSetupStatus()
+      setNeedsSetup(status.needsSetup)
+    } catch {
+      setNeedsSetup(false)
+    }
+    setLoginModalOpen(true)
+  }
   const closeLoginModal = () => {
     setLoginModalOpen(false)
     setFormErrors({})
@@ -521,12 +590,114 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Building2 className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Welcome to CTS</h2>
-              <p className="text-slate-600 dark:text-slate-400 mt-2">Sign in to your account</p>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                {needsSetup ? 'Create Admin Account' : 'Welcome to CTS'}
+              </h2>
+              <p className="text-slate-600 dark:text-slate-400 mt-2">
+                {needsSetup
+                  ? 'No users found. Create the first admin account to get started.'
+                  : 'Sign in to your account'}
+              </p>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
+            {needsSetup ? (
+              <form onSubmit={handleSetupSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={setupFormData.name}
+                    onChange={(e) => setSetupFormData({ ...setupFormData, name: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Admin User"
+                  />
+                  {formErrors.name && <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={setupFormData.email}
+                    onChange={(e) => setSetupFormData({ ...setupFormData, email: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="admin@company.com"
+                  />
+                  {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={setupFormData.password}
+                    onChange={(e) => setSetupFormData({ ...setupFormData, password: e.target.value })}
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="••••••••"
+                  />
+                  {formErrors.password && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.password}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    value={setupFormData.company_name}
+                    onChange={(e) =>
+                      setSetupFormData({ ...setupFormData, company_name: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="CTS"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    Company ID
+                  </label>
+                  <input
+                    type="text"
+                    value={setupFormData.company_id}
+                    onChange={(e) =>
+                      setSetupFormData({ ...setupFormData, company_id: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="CTS"
+                  />
+                  {formErrors.company_id && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.company_id}</p>
+                  )}
+                </div>
+
+                {formErrors.root && <p className="text-red-500 text-sm">{formErrors.root}</p>}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Creating admin...
+                    </>
+                  ) : (
+                    'Create Admin Account'
+                  )}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Email Address
@@ -590,6 +761,7 @@ export default function LandingPage() {
                 )}
               </button>
             </form>
+            )}
 
           </div>
         </div>

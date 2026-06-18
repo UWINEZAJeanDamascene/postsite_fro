@@ -2,8 +2,9 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import { useNavigate } from 'react-router-dom'
 import { authApi } from '@/api/auth'
 import { api } from '@/api/axios'
+import { isTokenValid } from '@/api/axios'
 import type { Company } from '@/api/companies'
-import type { User, LoginCredentials } from '@/types'
+import type { User, LoginCredentials, AuthResponse, SetupAdminData } from '@/types'
 import { UserRole } from '@/types'
 import { queryErrorHandler } from '@/main'
 
@@ -13,6 +14,7 @@ interface AuthContextType {
   isLoading: boolean
   isAuthenticated: boolean
   login: (credentials: LoginCredentials) => Promise<void>
+  setupAdmin: (data: SetupAdminData) => Promise<void>
   logout: () => void
   checkAuth: () => boolean
   isAdmin: () => boolean
@@ -66,6 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      const storedToken = localStorage.getItem('auth_token')
+      if (storedToken && !isTokenValid(storedToken)) {
+        localStorage.removeItem('auth_token')
+      }
+
       try {
         const userData = await authApi.getMe()
         console.debug('[AuthContext] getMe response:', userData)
@@ -97,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
         setCompany(null)
         setIsAuthenticated(false)
+        localStorage.removeItem('auth_token')
         try {
           localStorage.removeItem('company')
         } catch (err) {
@@ -110,19 +118,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth()
   }, [])
 
+  const applyAuthResponse = useCallback((response: AuthResponse) => {
+    if (response.user) setUser(response.user)
+
+    if (response.token) {
+      localStorage.setItem('auth_token', response.token)
+    }
+
+    setIsAuthenticated(true)
+    sessionStorage.removeItem('logged_out')
+
+    if (response.user.company) {
+      setCompany(response.user.company)
+      try {
+        localStorage.setItem('company', JSON.stringify(response.user.company))
+      } catch (err) {
+        // ignore storage errors
+      }
+    }
+  }, [])
+
   const login = useCallback(async (credentials: LoginCredentials) => {
     setIsLoading(true)
     try {
-      // Perform login; backend sets httpOnly cookie on success and returns token
       const response = await authApi.login(credentials)
-      // If backend returned user object, use it
-      if (response.user) setUser(response.user)
+      applyAuthResponse(response)
 
-      // Only store token when present (avoid storing string 'undefined')
-      if (response.token) {
-        localStorage.setItem('auth_token', response.token)
-      } else {
-        // If no token returned, attempt to hydrate user via cookie-based session
+      if (!response.token) {
         try {
           const me = await authApi.getMe()
           if (me) setUser(me)
@@ -130,23 +152,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Ignore - login may have relied on cookie which isn't available
         }
       }
-      setIsAuthenticated(true)
-      // Clear logout flag on successful login
-      sessionStorage.removeItem('logged_out')
-      if (response.user.company) {
-        setCompany(response.user.company)
-        try {
-          localStorage.setItem('company', JSON.stringify(response.user.company))
-        } catch (err) {
-          // ignore storage errors
-        }
-      }
     } catch (error) {
       throw error
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [applyAuthResponse])
+
+  const setupAdmin = useCallback(async (data: SetupAdminData) => {
+    setIsLoading(true)
+    try {
+      const response = await authApi.setupAdmin(data)
+      applyAuthResponse(response)
+    } catch (error) {
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }, [applyAuthResponse])
 
   const logout = useCallback(async () => {
     try {
@@ -228,6 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated,
     login,
+    setupAdmin,
     logout,
     checkAuth,
     isAdmin,

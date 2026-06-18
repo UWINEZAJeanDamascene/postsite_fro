@@ -37,12 +37,29 @@ export const getTokenPayload = (token: string | null): JwtPayload | null => {
   }
 }
 
-// Request interceptor - attach token for APIs that require it
+// Request interceptor - attach valid token for protected APIs only
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('auth_token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+  const url = config.url || ''
+  const isPublicAuthRoute =
+    url.includes('/auth/login') ||
+    url.includes('/auth/setup-status') ||
+    url.includes('/auth/setup-admin')
+
+  if (isPublicAuthRoute) {
+    return config
   }
+
+  const token = localStorage.getItem('auth_token')
+  if (!token) {
+    return config
+  }
+
+  if (!isTokenValid(token)) {
+    localStorage.removeItem('auth_token')
+    return config
+  }
+
+  config.headers.Authorization = `Bearer ${token}`
   return config
 })
 
