@@ -14,6 +14,8 @@ export { PurchaseOrderDetails } from "./PurchaseOrderDetails";
 export { PurchaseOrderReports } from "./PurchaseOrderReports";
 export { Suppliers } from "./Suppliers";
 export { SupplierDetails } from "./SupplierDetails";
+export { Clients } from "./Clients";
+export { ClientDetails } from "./ClientDetails";
 export { DeliveryNotes } from "./DeliveryNotes";
 export { DeliveryNoteDetails } from "./DeliveryNoteDetails";
 export { CreateDeliveryNote } from "./CreateDeliveryNote";

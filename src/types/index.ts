@@ -215,6 +215,32 @@ export interface CreateSupplierDto {
   address?: string;
 }
 
+// Client Type
+export interface Client {
+  id: string;
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  taxId?: string;
+  notes?: string;
+  company_id: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClientDto {
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  taxId?: string;
+  notes?: string;
+}
+
 // Purchase Order Types
 export interface POItem {
   _id?: string;

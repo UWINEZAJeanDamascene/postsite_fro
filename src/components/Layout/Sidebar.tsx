@@ -17,6 +17,7 @@ import {
   Truck,
   Receipt,
   ClipboardList,
+  Contact,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ const mainManagerNavItems = [
   { path: "/purchase-orders", label: "Purchase Orders", icon: FileText },
   { path: "/quotations", label: "Quotations", icon: ClipboardList },
   { path: "/suppliers", label: "Suppliers", icon: Truck },
+  { path: "/clients", label: "Clients", icon: Contact },
   { path: "/delivery-notes", label: "Delivery Notes", icon: Package },
   { path: "/purchase-returns", label: "Purchase Returns", icon: Receipt },
   { path: "/used-materials", label: "Used Materials View", icon: TrendingDown },

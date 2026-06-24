@@ -13,6 +13,8 @@ import type {
   ReceiveItemsDto,
   Supplier,
   CreateSupplierDto,
+  Client,
+  CreateClientDto,
   DeliveryNote,
   CreateDeliveryNoteDto,
   PurchaseReturn,
@@ -358,6 +360,41 @@ export const supplierApi = {
 
   toggleActive: async (id: string, isActive: boolean): Promise<Supplier> => {
     const { data } = await api.patch(`/suppliers/${id}/active`, { isActive });
+    return data;
+  },
+};
+
+// Client API
+export const clientApi = {
+  getAll: async (): Promise<Client[]> => {
+    const { data } = await api.get("/clients");
+    return data;
+  },
+
+  getById: async (id: string): Promise<Client> => {
+    const { data } = await api.get(`/clients/${id}`);
+    return data;
+  },
+
+  create: async (clientData: CreateClientDto): Promise<Client> => {
+    const { data } = await api.post("/clients", clientData);
+    return data;
+  },
+
+  update: async (
+    id: string,
+    clientData: Partial<CreateClientDto>,
+  ): Promise<Client> => {
+    const { data } = await api.put(`/clients/${id}`, clientData);
+    return data;
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/clients/${id}`);
+  },
+
+  toggleActive: async (id: string, isActive: boolean): Promise<Client> => {
+    const { data } = await api.patch(`/clients/${id}/active`, { isActive });
     return data;
   },
 };
@@ -721,6 +758,16 @@ export const quotationApi = {
     convertedToPO: { id: string; poNumber: string };
   }> => {
     const { data } = await api.post(`/quotations/${id}/convert`);
+    return data;
+  },
+
+  exportToPDF: async (id: string, download = false): Promise<Blob> => {
+    const { data } = await api.get(
+      `/quotations/${id}/pdf${download ? "?download=1" : ""}`,
+      {
+        responseType: "blob",
+      },
+    );
     return data;
   },
 };

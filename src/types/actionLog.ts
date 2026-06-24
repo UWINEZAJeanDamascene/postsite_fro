@@ -21,6 +21,10 @@ export enum ResourceType {
   MATERIAL = 'material',
   USER = 'user',
   SYSTEM = 'system',
+  COMPANY = 'company',
+  PURCHASE_ORDER = 'purchase_order',
+  QUOTATION = 'quotation',
+  CLIENT = 'client',
 }
 
 export interface ActionLog {

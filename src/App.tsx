@@ -36,6 +36,8 @@ import {
   PurchaseOrderReports,
   Suppliers,
   SupplierDetails,
+  Clients,
+  ClientDetails,
   DeliveryNotes,
   DeliveryNoteDetails,
   CreateDeliveryNote,
@@ -281,6 +283,22 @@ function App() {
             element={
               <ProtectedRoute requiredRole={UserRole.MAIN_MANAGER}>
                 <SupplierDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clients"
+            element={
+              <ProtectedRoute requiredRole={UserRole.MAIN_MANAGER}>
+                <Clients />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/clients/:id"
+            element={
+              <ProtectedRoute requiredRole={UserRole.MAIN_MANAGER}>
+                <ClientDetails />
               </ProtectedRoute>
             }
           />

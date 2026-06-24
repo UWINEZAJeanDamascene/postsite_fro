@@ -22,6 +22,8 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  Printer,
+  Download,
 } from "lucide-react";
 import { quotationApi } from "@/api/mainManager";
 import { format, cn } from "@/lib/utils";
@@ -138,6 +140,19 @@ export function QuotationDetails() {
     onError: () => toast.error("Failed to delete quotation"),
   });
 
+  const openQuotationPdfWindow = () => {
+    if (!id) {
+      toast.error("Quotation ID is missing");
+      return;
+    }
+
+    const url = `/api/quotations/${id}/pdf`;
+    const printWindow = window.open(url, "_blank", "noopener,noreferrer");
+    if (!printWindow) {
+      toast.error("Popup blocked. Allow popups and try again.");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -210,6 +225,23 @@ export function QuotationDetails() {
 
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={openQuotationPdfWindow}
+            disabled={isAnyPending}
+            className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted transition-colors text-foreground disabled:opacity-50"
+          >
+            <Printer className="w-4 h-4" />
+            Print
+          </button>
+          <button
+            onClick={openQuotationPdfWindow}
+            disabled={isAnyPending}
+            className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted transition-colors text-foreground disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" />
+            Download PDF
+          </button>
+
           {/* Draft actions */}
           {qt.status === "draft" && (
             <>
