@@ -140,13 +140,18 @@ export function QuotationDetails() {
     onError: () => toast.error("Failed to delete quotation"),
   });
 
+  const buildApiUrl = (path: string) => {
+    const apiBaseUrl = import.meta.env.VITE_API_URL || "";
+    return apiBaseUrl ? `${apiBaseUrl.replace(/\/+$/, "")}${path}` : path;
+  };
+
   const openQuotationPdfWindow = () => {
     if (!id) {
       toast.error("Quotation ID is missing");
       return;
     }
 
-    const url = `/api/quotations/${id}/pdf`;
+    const url = buildApiUrl(`/api/quotations/${id}/pdf`);
     const printWindow = window.open(url, "_blank", "noopener,noreferrer");
     if (!printWindow) {
       toast.error("Popup blocked. Allow popups and try again.");

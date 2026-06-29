@@ -287,7 +287,13 @@ export function PurchaseOrderDetails() {
         <div className="flex items-center gap-2">
           {/* Print/PDF Button - Always Available */}
           <button
-            onClick={() => window.open(`/api/purchase-orders/${po.id}/pdf`, '_blank')}
+            onClick={() => {
+              const apiBaseUrl = import.meta.env.VITE_API_URL || "";
+              const url = apiBaseUrl
+                ? `${apiBaseUrl.replace(/\/+$/, "")}/api/purchase-orders/${po.id}/pdf`
+                : `/api/purchase-orders/${po.id}/pdf`;
+              window.open(url, '_blank');
+            }}
             className="flex items-center gap-2 px-4 py-2 border border-input rounded-lg hover:bg-muted transition-colors"
           >
             <Printer className="w-4 h-4" />
