@@ -143,7 +143,7 @@ export function QuotationDetails() {
     onError: () => toast.error("Failed to delete quotation"),
   });
 
-  const openQuotationPdfWindow = async (download = false) => {
+  const openQuotationPdfWindow = async () => {
     if (!id) {
       toast.error("Quotation ID is missing");
       return;
@@ -159,7 +159,7 @@ export function QuotationDetails() {
     printWindow.document.close();
 
     try {
-      const blob = await quotationApi.exportToPDF(id, download);
+      const blob = await quotationApi.exportToPDF(id);
       const url = window.URL.createObjectURL(blob);
       printWindow.location.href = url;
     } catch (err: any) {
@@ -249,7 +249,7 @@ export function QuotationDetails() {
             Print
           </button>
           <button
-            onClick={() => openQuotationPdfWindow(true)}
+            onClick={() => openQuotationPdfWindow()}
             disabled={isAnyPending}
             className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-sm hover:bg-muted transition-colors text-foreground disabled:opacity-50"
           >
@@ -616,4 +616,5 @@ export function QuotationDetails() {
     </div>
   );
 }
+
 

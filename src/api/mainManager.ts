@@ -837,14 +837,12 @@ export const quotationApi = {
     return data;
   },
 
-  exportToPDF: async (id: string, download = false): Promise<Blob> => {
-    const { data } = await api.get(
-      `/quotations/${id}/pdf${download ? "?download=1" : ""}`,
-      {
-        responseType: "blob",
-      },
-    );
+  exportToPDF: async (id: string): Promise<Blob> => {
+    const { data } = await api.get(`/quotations/${id}/pdf`, {
+      responseType: "blob",
+    });
     return data;
   },
 };
+
 
