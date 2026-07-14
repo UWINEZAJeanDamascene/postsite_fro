@@ -4,9 +4,10 @@ import type { JwtPayload } from '@/types'
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
-  (import.meta.env.MODE === 'development' ? '/api' : 'https://mult-site-stock.onrender.com')
+  (import.meta.env.MODE === 'development' ? '/api' : '/api')
 
 // Note: authentication is cookie-based (httpOnly cookie set by backend)
+// In production, set VITE_API_URL to your backend base URL in Vercel environment vars.
 // Axios should send cookies with requests
 export const api = axios.create({
   baseURL: API_URL,
