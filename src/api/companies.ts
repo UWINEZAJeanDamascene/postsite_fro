@@ -5,6 +5,8 @@ export interface Company {
   id?: string; // From auth API
   name: string;
   logo?: string;
+  signatureImage?: string;
+  stampImage?: string;
   address?: string;
   phone?: string;
   email?: string;
@@ -26,6 +28,8 @@ export interface UpdateCompanyData {
   industry?: string;
   description?: string;
   logo?: string;
+  signatureImage?: string;
+  stampImage?: string;
 }
 
 export const companiesApi = {
@@ -44,6 +48,18 @@ export const companiesApi = {
   // Upload company logo
   uploadLogo: async (id: string, image: string): Promise<{ logo: string }> => {
     const response = await api.post(`/companies/${id}/logo`, { image });
+    return response.data;
+  },
+
+  // Upload company signature
+  uploadSignature: async (id: string, image: string): Promise<{ signatureImage: string }> => {
+    const response = await api.post(`/companies/${id}/signature`, { image });
+    return response.data;
+  },
+
+  // Upload company stamp
+  uploadStamp: async (id: string, image: string): Promise<{ stampImage: string }> => {
+    const response = await api.post(`/companies/${id}/stamp`, { image });
     return response.data;
   },
 };
