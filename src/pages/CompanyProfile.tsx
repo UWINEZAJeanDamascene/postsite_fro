@@ -42,10 +42,14 @@ export default function CompanyProfile() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Mutation for updating company profile
+  const getCompanyId = useCallback(() => {
+    return company?._id || company?.id || user?.company?.id || user?.company_id;
+  }, [company, user]);
+
   const updateCompanyMutation = useMutation({
     mutationFn: async (data: UpdateCompanyData) => {
-      const companyId = company?._id || company?.id || user?.company_id;
-      console.debug('[CompanyProfile] updateCompanyMutation:', { companyId, company, userCompanyId: user?.company_id });
+      const companyId = getCompanyId();
+      console.debug('[CompanyProfile] updateCompanyMutation:', { companyId, company, userCompanyId: user?.company_id, userCompanyObjId: user?.company?.id });
       if (!companyId) throw new Error('Company ID not found');
       return companiesApi.updateCompany(companyId, data);
     },
@@ -65,7 +69,7 @@ export default function CompanyProfile() {
   // Mutation for uploading logo
   const uploadLogoMutation = useMutation({
     mutationFn: async (image: string) => {
-      const companyId = company?._id || company?.id || user?.company_id;
+      const companyId = getCompanyId();
       console.debug('[CompanyProfile] uploadLogoMutation:', { companyId });
       if (!companyId) throw new Error('Company ID not found');
       return companiesApi.uploadLogo(companyId, image);
@@ -85,7 +89,7 @@ export default function CompanyProfile() {
 
   const uploadSignatureMutation = useMutation({
     mutationFn: async (image: string) => {
-      const companyId = company?._id || company?.id || user?.company_id;
+      const companyId = getCompanyId();
       if (!companyId) throw new Error('Company ID not found');
       return companiesApi.uploadSignature(companyId, image);
     },
@@ -106,7 +110,7 @@ export default function CompanyProfile() {
 
   const uploadStampMutation = useMutation({
     mutationFn: async (image: string) => {
-      const companyId = company?._id || company?.id || user?.company_id;
+      const companyId = getCompanyId();
       if (!companyId) throw new Error('Company ID not found');
       return companiesApi.uploadStamp(companyId, image);
     },
@@ -124,6 +128,72 @@ export default function CompanyProfile() {
       setIsUploadingImage(false);
     },
   });
+
+  const deleteLogoMutation = useMutation({
+    mutationFn: async () => {
+      const companyId = getCompanyId();
+      if (!companyId) throw new Error('Company ID not found');
+      return companiesApi.deleteLogo(companyId);
+    },
+    onSuccess: () => {
+      updateCompany({ logo: undefined });
+      toast.success('Company logo deleted successfully');
+      setIsUploadingImage(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to delete logo');
+      console.error('[CompanyProfile] delete logo error:', error);
+      setIsUploadingImage(false);
+    },
+  });
+
+  const deleteSignatureMutation = useMutation({
+    mutationFn: async () => {
+      const companyId = getCompanyId();
+      if (!companyId) throw new Error('Company ID not found');
+      return companiesApi.deleteSignature(companyId);
+    },
+    onSuccess: () => {
+      updateCompany({ signatureImage: undefined });
+      toast.success('Signature image deleted successfully');
+      setIsUploadingImage(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to delete signature');
+      console.error('[CompanyProfile] delete signature error:', error);
+      setIsUploadingImage(false);
+    },
+  });
+
+  const deleteStampMutation = useMutation({
+    mutationFn: async () => {
+      const companyId = getCompanyId();
+      if (!companyId) throw new Error('Company ID not found');
+      return companiesApi.deleteStamp(companyId);
+    },
+    onSuccess: () => {
+      updateCompany({ stampImage: undefined });
+      toast.success('Stamp image deleted successfully');
+      setIsUploadingImage(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to delete stamp');
+      console.error('[CompanyProfile] delete stamp error:', error);
+      setIsUploadingImage(false);
+    },
+  });
+
+  const handleDeleteImage = useCallback((type: 'logo' | 'signature' | 'stamp') => {
+    if (isUploadingImage) return;
+    setIsUploadingImage(true);
+    if (type === 'logo') {
+      deleteLogoMutation.mutate();
+    } else if (type === 'signature') {
+      deleteSignatureMutation.mutate();
+    } else {
+      deleteStampMutation.mutate();
+    }
+  }, [deleteLogoMutation, deleteSignatureMutation, deleteStampMutation, isUploadingImage]);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -248,13 +318,25 @@ export default function CompanyProfile() {
                 )}
               </div>
               {canEdit && isEditing && (
-                <button
-                  type="button"
-                  onClick={() => openFileDialog('logo')}
-                  className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-lg z-10"
-                >
-                  <Camera className="w-5 h-5" />
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => openFileDialog('logo')}
+                    className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-lg z-10"
+                  >
+                    <Camera className="w-5 h-5" />
+                  </button>
+                  {company?.logo && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImage('logo')}
+                      className="absolute -bottom-2 -left-2 w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center hover:bg-red-700 transition-colors shadow-lg z-10"
+                      disabled={isUploadingImage}
+                    >
+                      <span className="text-sm font-bold">X</span>
+                    </button>
+                  )}
+                </>
               )}
             </div>
             <h2 className="text-xl font-semibold text-center">{company?.name || formData.name || 'Company'}</h2>
@@ -283,13 +365,24 @@ export default function CompanyProfile() {
               )}
             </div>
             {canEdit && isEditing && (
-              <Button
-                variant="secondary"
-                onClick={() => openFileDialog('signature')}
-                disabled={isUploadingImage}
-              >
-                Upload Signature
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => openFileDialog('signature')}
+                  disabled={isUploadingImage}
+                >
+                  Upload Signature
+                </Button>
+                {company?.signatureImage && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDeleteImage('signature')}
+                    disabled={isUploadingImage}
+                  >
+                    Delete Signature
+                  </Button>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -313,13 +406,24 @@ export default function CompanyProfile() {
               )}
             </div>
             {canEdit && isEditing && (
-              <Button
-                variant="secondary"
-                onClick={() => openFileDialog('stamp')}
-                disabled={isUploadingImage}
-              >
-                Upload Stamp
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => openFileDialog('stamp')}
+                  disabled={isUploadingImage}
+                >
+                  Upload Stamp
+                </Button>
+                {company?.stampImage && (
+                  <Button
+                    variant="outline"
+                    onClick={() => handleDeleteImage('stamp')}
+                    disabled={isUploadingImage}
+                  >
+                    Delete Stamp
+                  </Button>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>

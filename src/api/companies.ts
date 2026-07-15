@@ -62,6 +62,24 @@ export const companiesApi = {
     const response = await api.post(`/companies/${id}/stamp`, { image });
     return response.data;
   },
+
+  // Delete company logo
+  deleteLogo: async (id: string): Promise<{ logo: null }> => {
+    const response = await api.delete(`/companies/${id}/logo`);
+    return response.data;
+  },
+
+  // Delete company signature
+  deleteSignature: async (id: string): Promise<{ signatureImage: null }> => {
+    const response = await api.delete(`/companies/${id}/signature`);
+    return response.data;
+  },
+
+  // Delete company stamp
+  deleteStamp: async (id: string): Promise<{ stampImage: null }> => {
+    const response = await api.delete(`/companies/${id}/stamp`);
+    return response.data;
+  },
 };
 
 export default companiesApi;
