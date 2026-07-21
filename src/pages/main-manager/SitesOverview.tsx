@@ -127,7 +127,10 @@ function SiteCard({ site, stats, rank, onDelete }: SiteCardProps) {
 
   return (
     <div
-      onClick={() => navigate(`/sites/${site._id}`)}
+      onClick={() => {
+        if (site._id) navigate(`/sites/${site._id}`);
+        else console.warn('Attempted to navigate to site with missing _id', site);
+      }}
       className={cn(
         "bg-card rounded-xl border border-border p-6 shadow-sm cursor-pointer relative",
         "hover:shadow-md hover:border-primary transition-all duration-200",
@@ -299,6 +302,18 @@ export function SitesOverview() {
       const sitesData = await Promise.all(
         sites.map(async (site) => {
           try {
+            if (!site._id) {
+              console.warn('SitesOverview: skipping details fetch for site with missing _id', site);
+              return {
+                site,
+                stats: {
+                  totalRecords: 0,
+                  pendingPriceCount: 0,
+                  lastActivityDate: null,
+                },
+              };
+            }
+
             const details = await sitesManagerApi.getSiteDetails(site._id);
             return {
               site,

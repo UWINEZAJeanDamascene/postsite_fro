@@ -66,6 +66,10 @@ export const dashboardApi = {
 export const sitesManagerApi = {
   getAllSites: async (): Promise<Site[]> => {
     const { data } = await api.get("/sites");
+    // Normalize backend `id` to frontend `_id` to avoid missing id issues
+    if (Array.isArray(data)) {
+      return data.map((s: any) => ({ ...s, _id: s._id ?? s.id }));
+    }
     return data;
   },
 
