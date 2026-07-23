@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -42,11 +42,10 @@ export function RecordMaterial() {
     resolver: zodResolver(siteRecordSchema),
     mode: 'onSubmit',
     defaultValues: {
-      quantityReceived: undefined as any,
+      quantityReceived: 0, // coerce.number default: empty → 0 → fails .positive(), forces user to enter a real value
       quantityUsed: 0,
       date: new Date().toISOString().split('T')[0],
       notes: '',
-      site_id: '',
       materialName: '',
     },
   })
@@ -62,13 +61,6 @@ export function RecordMaterial() {
     quantityUsed: number
     notes?: string
   }>>([])
-
-  // Set site_id when sites are loaded (for single site case)
-  useEffect(() => {
-    if (mySites && mySites.length > 0 && !watch('site_id')) {
-      setValue('site_id', mySites[0]._id)
-    }
-  }, [mySites, setValue, watch])
 
   const { mutate: createRecord, isPending: isSubmitting } = useMutation({
     mutationFn: siteRecordsApi.createSiteRecord,
@@ -132,14 +124,15 @@ export function RecordMaterial() {
   })
 
   const onSubmit = (data: SiteRecordFormData) => {
+    const assignedSite = mySites![0]
+    const site_id = (assignedSite as any)?.id || assignedSite._id
     if (isBulkMode) {
-      // In bulk mode, submit all items at once
       if (bulkItems.length === 0) {
         toast.error('Please add at least one material')
         return
       }
       const records = bulkItems.map(item => ({
-        site_id: data.site_id,
+        site_id,
         material_id: item.material_id,
         materialName: item.materialName,
         quantityReceived: item.quantityReceived,
@@ -149,9 +142,8 @@ export function RecordMaterial() {
       }))
       createBulkRecords(records)
     } else {
-      // Single mode
       createRecord({
-        site_id: data.site_id,
+        site_id,
         material_id: data.material_id,
         materialName: data.materialName,
         quantityReceived: data.quantityReceived,
@@ -178,7 +170,8 @@ export function RecordMaterial() {
 
   // Handle bulk submit directly (bypasses form validation)
   const handleBulkSubmit = () => {
-    const site_id = watch('site_id')
+    const assignedSite = mySites![0]
+    const site_id = (assignedSite as any)?.id || assignedSite._id
     const date = watch('date')
     const notes = watch('notes')
 
@@ -277,33 +270,7 @@ export function RecordMaterial() {
         onSubmit={handleSubmit(onSubmit)}
         className="bg-card rounded-xl border border-border shadow-sm p-6 space-y-6"
       >
-        {/* Site Selection */}
-        {mySites && mySites.length > 1 && (
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">
-              Site *
-            </label>
-            <select
-              {...register('site_id')}
-              className={cn(
-                'w-full px-4 py-2.5 rounded-lg border bg-background',
-                errors?.site_id ? 'border-destructive' : 'border-input'
-              )}
-            >
-              <option value="">Select a site...</option>
-              {mySites?.map((site) => (
-                <option key={site._id} value={site._id}>
-                  {site.name}
-                </option>
-              ))}
-            </select>
-            {errors?.site_id?.message && (
-              <p className="mt-1 text-sm text-destructive">{errors.site_id.message}</p>
-            )}
-          </div>
-        )}
-
-        {/* Material Selection - Single Mode Only */}
+         {/* Material Selection - Single Mode Only */}
         {!isBulkMode && (
           <div>
             <label className="block text-sm font-medium text-foreground mb-1.5">
@@ -317,6 +284,9 @@ export function RecordMaterial() {
                   value={{ id: field.value, name: field.value }}
                   onChange={(material) => {
                     field.onChange(material.name)
+                    if (material.id) {
+                      setValue('material_id', material.id)
+                    }
                   }}
                   error={errors.materialName?.message}
                 />

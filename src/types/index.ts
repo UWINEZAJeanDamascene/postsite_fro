@@ -123,7 +123,7 @@ export interface SiteRecord {
 
 export interface MainStockRecord {
   _id: string;
-  source: "site" | "direct";
+  source: "SITE" | "DIRECT";
   site_id?: string;
   siteRecord_id?: string;
   material_id?: string;
@@ -133,7 +133,7 @@ export interface MainStockRecord {
   price?: number | null;
   totalValue?: number | null;
   date: string;
-  status: "pending_price" | "priced" | "direct";
+  status: "PENDING_PRICE" | "PRICED" | "DIRECT";
   notes?: string;
   recordedBy: string;
   company_id: string;

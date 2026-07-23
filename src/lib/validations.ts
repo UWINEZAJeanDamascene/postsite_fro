@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
 export const siteRecordSchema = z.object({
-  site_id: z.string().min(1, 'Site is required'),
   material_id: z.string().optional(),
   materialName: z.string().min(1, 'Material is required'),
   quantityReceived: z.coerce.number({

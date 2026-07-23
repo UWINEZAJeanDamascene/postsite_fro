@@ -298,11 +298,11 @@ function AddDirectRecordModal({
                   <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded-lg shadow-lg max-h-48 overflow-auto">
                     {materials.map((m) => (
                       <button
-                        key={m._id}
+                        key={(m as any)._id || (m as any).id}
                         type="button"
                         onClick={() => {
                           setValue('materialName', m.name)
-                          setValue('material_id', m._id)
+                          setValue('material_id', (m as any)._id || (m as any).id)
                           setSearchQuery('')
                         }}
                         className="w-full px-4 py-2 text-left hover:bg-muted"
@@ -427,8 +427,8 @@ export function MainStockRecords() {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState('')
-  const [sourceFilter, setSourceFilter] = useState<'all' | 'site' | 'direct'>('all')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending_price' | 'priced' | 'direct'>('all')
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'SITE' | 'DIRECT'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'PENDING_PRICE' | 'PRICED' | 'DIRECT'>('all')
   const [dateRange, setDateRange] = useState({ startDate: '', endDate: '' })
   const [showFilters, setShowFilters] = useState(false)
   const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null)
@@ -479,8 +479,9 @@ export function MainStockRecords() {
       queryClient.invalidateQueries({ queryKey: ['main-stock'] })
       toast.success('Record marked as received')
     },
-    onError: () => {
-      toast.error('Failed to mark as received')
+    onError: (error: any) => {
+      console.error('Mark as received error:', error)
+      toast.error(error.response?.data?.error || error.message || 'Failed to mark as received')
     },
   })
 
@@ -564,8 +565,8 @@ export function MainStockRecords() {
             className="px-4 py-2 border border-input rounded-lg bg-background text-foreground"
           >
             <option value="all">All Sources</option>
-            <option value="site">Site Only</option>
-            <option value="direct">Direct Only</option>
+            <option value="SITE">Site Only</option>
+            <option value="DIRECT">Direct Only</option>
           </select>
 
           <select
@@ -574,9 +575,9 @@ export function MainStockRecords() {
             className="px-4 py-2 border border-input rounded-lg bg-background text-foreground"
           >
             <option value="all">All Statuses</option>
-            <option value="pending_price">Pending Price</option>
-            <option value="priced">Priced</option>
-            <option value="direct">Direct</option>
+            <option value="PENDING_PRICE">Pending Price</option>
+            <option value="PRICED">Priced</option>
+            <option value="DIRECT">Direct</option>
           </select>
 
           <button
@@ -645,7 +646,7 @@ export function MainStockRecords() {
                   <td className="px-4 py-3 font-medium text-foreground">{record.materialName}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
-                      {record.source === 'site' ? (
+                      {record.source === 'SITE' ? (
                         <>
                           <Building2 className="w-3 h-3 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground">Site</span>
@@ -665,7 +666,7 @@ export function MainStockRecords() {
                     {format.number(record.quantityUsed, 2)}
                   </td>
                   <td className="px-4 py-3">
-                    {record.status === 'pending_price' ? (
+                    {record.status === 'PENDING_PRICE' ? (
                       <InlinePriceEdit
                         recordId={record._id}
                         currentPrice={record.price}
@@ -688,9 +689,9 @@ export function MainStockRecords() {
                     <span
                       className={cn(
                         'px-2 py-1 rounded-full text-xs font-medium',
-                        record.status === 'pending_price' && 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-                        record.status === 'priced' && 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-                        record.status === 'direct' && 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                        record.status === 'PENDING_PRICE' && 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+                        record.status === 'PRICED' && 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+                        record.status === 'DIRECT' && 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                       )}
                     >
                       {record.status.replace('_', ' ')}
@@ -705,7 +706,7 @@ export function MainStockRecords() {
                       >
                         <History className="w-4 h-4" />
                       </button>
-                      {record.status === 'pending_price' && (
+                      {record.status === 'PENDING_PRICE' && (
                         <>
                           {editingPriceRecordId === record._id ? (
                             <InlinePriceEdit
@@ -728,7 +729,7 @@ export function MainStockRecords() {
                           )}
                         </>
                       )}
-                      {record.status === 'direct' && (
+                      {record.status === 'DIRECT' && (
                         <button
                           onClick={() => handleMarkReceived(record._id)}
                           className="p-1 text-muted-foreground hover:text-green-600 dark:hover:text-green-400"

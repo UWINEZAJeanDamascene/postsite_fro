@@ -356,7 +356,7 @@ export function SiteDetails() {
                       <td className="px-6 py-4">
                         {activeTab === "received" &&
                         record.mainStockEntryId &&
-                        (record as any).status === "pending_price" ? (
+                        (record as any).status === "PENDING_PRICE" ? (
                           <InlinePriceEdit
                             recordId={record.mainStockEntryId}
                             currentPrice={(record as any).price}
@@ -381,13 +381,13 @@ export function SiteDetails() {
                           <span
                             className={cn(
                               "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium",
-                              (record as any).status === "pending_price" &&
+                              (record as any).status === "PENDING_PRICE" &&
                                 "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
-                              (record as any).status === "priced" &&
+                              (record as any).status === "PRICED" &&
                                 "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
                             )}
                           >
-                            {(record as any).status === "pending_price" ? (
+                            {(record as any).status === "PENDING_PRICE" ? (
                               <>
                                 <Clock className="w-3 h-3" /> Pending
                               </>

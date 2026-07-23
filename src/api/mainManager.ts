@@ -162,8 +162,8 @@ export const mainStockApi = {
   getRecords: async (params?: {
     page?: number;
     limit?: number;
-    source?: "all" | "site" | "direct";
-    status?: "all" | "pending_price" | "priced" | "direct";
+    source?: "all" | "SITE" | "DIRECT";
+    status?: "all" | "PENDING_PRICE" | "PRICED" | "DIRECT";
     startDate?: string;
     endDate?: string;
     materialName?: string;
@@ -203,7 +203,8 @@ export const mainStockApi = {
     id: string,
     price?: number,
   ): Promise<MainStockRecord> => {
-    const { data } = await api.patch(`/main-stock/${id}/receive`, { price });
+    const payload = price !== undefined ? { price } : {};
+    const { data } = await api.patch(`/main-stock/${id}/receive`, payload);
     return data;
   },
 
