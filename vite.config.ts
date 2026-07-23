@@ -21,7 +21,7 @@ export default defineConfig({
   },
   define: {
     'import.meta.env.VITE_API_URL': JSON.stringify(
-      process.env.VITE_API_URL || (process.env.NODE_ENV === 'production' ? 'https://mult-site-stock.onrender.com/api' : '/api')
+      process.env.VITE_API_URL || (process.env.NODE_ENV === 'production' ? 'https://postsite-end.onrender.com/api' : '/api')
     ),
   },
 })
